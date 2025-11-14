@@ -1,0 +1,17 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from core.entities.movie import Movie
+
+
+a=Movie(0, 'Piska', ["Драма", "Какашка"], 2025, 6.7, 'Абобик')
+b=Movie(0, 'Pisun', ["Какашка"], 2025, 2.1, 'OCHKO')
+
+print(a.id)
+print(f'Рейтинг до изм | {a.rating}')
+a.rating=2
+print(f'Рейтинг после изм | {a.rating}')
+
+
+print(str(a))
+print(repr(a))
+print(a < b)
