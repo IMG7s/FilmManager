@@ -18,18 +18,33 @@ from core.entities.movie import Movie
 # print(a < b)
 # print(a == b)
 
-try:
-    movie = Movie(
-        movie_id=1,
-        title="Фильм ужасов",
-        genres=["ужасы"],
-        year=2025,
-        rating=7.5,
-    )
-except ValueError as e:
-    print(e)
+# try:
+#     movie = Movie(
+#         movie_id=1,
+#         title="Фильм ужасов",
+#         genres=["ужасы"],
+#         year=2025,
+#         rating=7.5,
+#     )
+# except ValueError as e:
+#     print(e)
 
-# movie.genres = ["комедия", "дрма"]
+# # movie.genres = ["комедия", "дрма"]
 
-# print(movie.genres)
-print(movie)
+# # print(movie.genres)
+# print(movie)
+
+
+# data = {
+#     "id": 1,
+#     "title": "Интерстеллар",
+#     "genres": ["фантастика", "драма"],
+#     "year": 2014,
+#     "rating": 22.0,
+#     "director": "Кристофер Нолан",
+# }
+
+# movie = Movie.from_dict(data)
+
+# print(movie)
+# print(movie.to_dict())
