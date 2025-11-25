@@ -2,7 +2,6 @@ from typing import List
 
 
 class Movie:
-
     allowed_genres = [
         "ужасы",
         "комедия",
@@ -14,6 +13,10 @@ class Movie:
         "детектив",
         "приключения",
         "аниме",
+        "криминал",
+        "военный",
+        "биография",
+        "фэнтези",
     ]
 
     def __init__(
@@ -28,9 +31,13 @@ class Movie:
         self.__id = movie_id
         self.title = title
         self.genres = genres
-        self.director = director
         self.year = year
-        self.__rating = rating
+        self.rating = rating
+        self.director = director
+
+    # ---
+    #  PROPERTIES
+    # ---
 
     @property
     def id(self):
@@ -60,6 +67,37 @@ class Movie:
             raise ValueError(f"Некорректные жанры: {', '.join(invalid_genres)}")
         self.__genres = genres_list
 
+    # ---
+    #  SERIALIZATION
+    # ---
+
+    def to_dict(self):
+        """Преобразование объекта Movie в словарь для JSON"""
+        return {
+            "id": self.__id,
+            "title": self.title,
+            "genres": self.genres,
+            "year": self.year,
+            "rating": self.rating,
+            "director": self.director,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Создаёт объект Movie из словаря (после загрузки JSON)"""
+        return cls(
+            movie_id=data["id"],
+            title=data["title"],
+            genres=data["genres"],
+            year=data["year"],
+            rating=data["rating"],
+            director=data.get("director", "Не указан"),
+        )
+
+    # ---
+    #  MAGIC METHODS
+    # ---
+
     def __str__(self) -> str:
         genres_str = ", ".join(self.__genres)
         return f"«{self.title}» ({self.year} | Реж. {self.director} | {genres_str} | Рейтинг: {self.rating}/10)"
@@ -67,35 +105,20 @@ class Movie:
     def __repr__(self) -> str:
         return f"id: {self.id}, {self.title!r}"
 
-    def __lt__(self, other: object) -> bool:
-        # assert isinstance(other, Movie)
-        if not isinstance(other, Movie):
-            return NotImplemented
-        return self.rating < other.rating
+    def __lt__(self, other):
+        return isinstance(other, Movie) and self.rating < other.rating
 
-    def __le__(self, other: object) -> bool:
-        if not isinstance(other, Movie):
-            return NotImplemented
-        return self.rating <= other.rating
+    def __le__(self, other):
+        return isinstance(other, Movie) and self.rating <= other.rating
 
-    def __gt__(self, other: object) -> bool:
-        # assert isinstance(other, Movie)
-        if not isinstance(other, Movie):
-            return NotImplemented
-        return self.rating > other.rating
+    def __gt__(self, other):
+        return isinstance(other, Movie) and self.rating > other.rating
 
-    def __ge__(self, other: object) -> bool:
-        if not isinstance(other, Movie):
-            return NotImplemented
-        return self.rating >= other.rating
+    def __ge__(self, other):
+        return isinstance(other, Movie) and self.rating >= other.rating
 
-    def __eq__(self, other: object) -> bool:
-        # assert isinstance(other, Movie)
-        if not isinstance(other, Movie):
-            return NotImplemented
-        return self.rating == other.rating
+    def __eq__(self, other):
+        return isinstance(other, Movie) and self.rating == other.rating
 
-    def __ne__(self, other: object) -> bool:
-        if not isinstance(other, Movie):
-            return NotImplemented
-        return self.rating != other.rating
+    def __ne__(self, other):
+        return isinstance(other, Movie) and self.rating != other.rating
