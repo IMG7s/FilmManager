@@ -30,6 +30,7 @@ FilmManager — это консольное приложение, демонст
 ---
 
 ## 🙌 Авторы:
+.
 	[IMG7$](https://github.com/IMG7s)
 	[Misha071](https://github.com/Misha071)
 	[timurgubajdulin-commits](https://github.com/timurgubajdulin-commits)
