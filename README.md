@@ -28,3 +28,9 @@ FilmManager — это консольное приложение, демонст
 	•	Паттерны проектирования
 	
 ---
+
+## 🙌 Авторы:
+	[IMG7$](https://github.com/IMG7s)
+	[Misha071](https://github.com/Misha071)
+	[timurgubajdulin-commits](https://github.com/timurgubajdulin-commits)
+	[Ikhsan-gimat](https://github.com/Ikhsan-gimat)
