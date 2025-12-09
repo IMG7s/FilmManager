@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from utils.movie_db import MovieDB
@@ -10,8 +11,20 @@ from core.entities.movie import Movie
 #     SimilarUsersStrategy,
 # )
 
+# ===== Цвета ANSI =====
+RESET = "\033[0m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+RED = "\033[31m"
+CYAN = "\033[36m"
+MAGENTA = "\033[35m"
+
+
+def clear_screen() -> None:
+    os.system("cls" if os.name == "nt" else "clear")
+
+
 class ConsoleUser:
-    """Пользователь для консольного интерфейса."""
     def __init__(self, name: str) -> None:
         self.name = name
         self.ratings: dict[int, float] = {}      # {movie_id: score}
@@ -50,8 +63,9 @@ class ConsoleApp:
 
     def run(self) -> None:
         while True:
+            clear_screen()
             self._print_menu()
-            choice = input("Ваш выбор: ").strip()
+            choice = input(YELLOW + "Ваш выбор: " + RESET).strip()
 
             if choice == "1":
                 self._register()
@@ -66,17 +80,18 @@ class ConsoleApp:
             elif choice == "6":
                 self._set_preferences()
             elif choice == "0":
-                print("Выход из приложения...")
+                print(MAGENTA + "Выход из приложения..." + RESET)
                 break
             else:
-                print("Неизвестная команда.\n")
+                print(RED + "Неизвестная команда.\n" + RESET)
+            input(YELLOW + "Нажмите Enter, чтобы продолжить..." + RESET)
 
     def _print_menu(self) -> None:
-        print("=" * 40)
-        print("РЕКОМЕНДАТЕЛЬНАЯ СИСТЕМА ФИЛЬМОВ")
-        print("=" * 40)
+        print(CYAN + "=" * 40 + RESET)
+        print(MAGENTA + "РЕКОМЕНДАТЕЛЬНАЯ СИСТЕМА ФИЛЬМОВ" + RESET)
+        print(CYAN + "=" * 40 + RESET)
         user_name = self._current_user.name if self._current_user else "[нет]"
-        print(f"Текущий пользователь: {user_name}")
+        print(f"Текущий пользователь: {GREEN}{user_name}{RESET}")
         print("-" * 40)
         print("1. Регистрация")
         print("2. Вход")
@@ -90,33 +105,33 @@ class ConsoleApp:
     def _register(self) -> None:
         name = input("Введите имя нового пользователя: ").strip()
         if not name:
-            print("Имя не может быть пустым.\n")
+            print(RED + "Имя не может быть пустым.\n" + RESET)
             return
         if name in self._users:
-            print("Такой пользователь уже существует.\n")
+            print(RED + "Такой пользователь уже существует.\n" + RESET)
             return
 
         user = ConsoleUser(name)
         self._users[name] = user
         self._current_user = user
-        print(f"Пользователь '{name}' зарегистрирован и авторизован.\n")
+        print(GREEN + f"Пользователь '{name}' зарегистрирован и авторизован.\n" + RESET)
 
     def _login(self) -> None:
         name = input("Введите имя пользователя: ").strip()
         user = self._users.get(name)
         if not user:
-            print("Пользователь не найден.\n")
+            print(RED + "Пользователь не найден.\n" + RESET)
             return
 
         self._current_user = user
-        print(f"Вы вошли как '{name}'.\n")
+        print(GREEN + f"Вы вошли как '{name}'.\n" + RESET)
 
     def _show_movies(self) -> None:
         if not self._movies:
-            print("Список фильмов пуст.\n")
+            print(RED + "Список фильмов пуст.\n" + RESET)
             return
 
-        print("\nСписок фильмов:")
+        print("\n" + CYAN + "Список фильмов:" + RESET)
         print("-" * 40)
         for m in self._movies:
             print(f"[{m.id}] {m.title} ({m.year}) — рейтинг: {m.rating}")
@@ -131,27 +146,27 @@ class ConsoleApp:
         try:
             movie_id = int(raw_id)
         except ValueError:
-            print("Некорректный ID.\n")
+            print(RED + "Некорректный ID.\n" + RESET)
             return
 
         movie = self._db.get_by_id(movie_id)
         if not movie:
-            print("Фильм с таким ID не найден.\n")
+            print(RED + "Фильм с таким ID не найден.\n" + RESET)
             return
 
         raw_score = input("Введите оценку (1–10): ").strip()
         try:
             score = float(raw_score)
         except ValueError:
-            print("Некорректная оценка.\n")
+            print(RED + "Некорректная оценка.\n" + RESET)
             return
 
         if not (1 <= score <= 10):
-            print("Оценка должна быть от 1 до 10.\n")
+            print(RED + "Оценка должна быть от 1 до 10.\n" + RESET)
             return
 
         self._current_user.rate(movie_id, score)
-        print(f"Вы поставили фильму '{movie.title}' оценку {score}.\n")
+        print(GREEN + f"Вы поставили фильму '{movie.title}' оценку {score}.\n" + RESET)
 
     def _set_preferences(self) -> None:
         if not self._ensure_logged_in():
@@ -164,11 +179,11 @@ class ConsoleApp:
                 all_genres.add(g)
 
         if not all_genres:
-            print("Жанры не найдены.\n")
+            print(RED + "Жанры не найдены.\n" + RESET)
             return
 
         genres_list = sorted(all_genres)
-        print("\nДоступные жанры:")
+        print("\n" + CYAN + "Доступные жанры:" + RESET)
         for i, g in enumerate(genres_list, start=1):
             print(f"{i}. {g}")
 
@@ -176,13 +191,13 @@ class ConsoleApp:
             "Введите номера любимых жанров через запятую (например, 1,3,5): "
         ).strip()
         if not raw:
-            print("Предпочтения не изменены.\n")
+            print(YELLOW + "Предпочтения не изменены.\n" + RESET)
             return
 
         try:
             indices = [int(x.strip()) for x in raw.split(",")]
         except ValueError:
-            print("Некорректный ввод.\n")
+            print(RED + "Некорректный ввод.\n" + RESET)
             return
 
         selected: list[str] = []
@@ -191,25 +206,25 @@ class ConsoleApp:
                 selected.append(genres_list[idx - 1])
 
         if not selected:
-            print("Не выбрано ни одного жанра.\n")
+            print(RED + "Не выбрано ни одного жанра.\n" + RESET)
             return
 
         self._current_user.set_preferences(selected)
-        print("Предпочтения по жанрам обновлены.\n")
+        print(GREEN + "Предпочтения по жанрам обновлены.\n" + RESET)
 
     def _recommend_menu(self) -> None:
         if not self._ensure_logged_in():
             return
 
-        print("Выберите стратегию:")
+        print(CYAN + "Выберите стратегию:" + RESET)
         print("1. По любимым жанрам пользователя")
         print("2. Фильмы с наивысшим рейтингом")
         print("3. На основе похожих пользователей")
-        choice = input("Ваш выбор: ").strip()
+        choice = input(YELLOW + "Ваш выбор: " + RESET).strip()
 
         strategy = self._strategies.get(choice)
         if not strategy:
-            print("Неизвестная стратегия.\n")
+            print(RED + "Неизвестная стратегия.\n" + RESET)
             return
 
         min_rating = self._ask_optional_float(
@@ -220,14 +235,13 @@ class ConsoleApp:
         )
 
         recommended = strategy.recommend(self._movies, self._current_user, self._users)
-
         recommended = self._apply_filters(recommended, min_rating, min_year)
 
         if not recommended:
-            print("Подходящих фильмов нет.\n")
+            print(RED + "Подходящих фильмов нет.\n" + RESET)
             return
 
-        print("\nРекомендованные фильмы:")
+        print("\n" + CYAN + "Рекомендованные фильмы:" + RESET)
         print("-" * 40)
         for m in recommended:
             print(f"[{m.id}] {m.title} ({m.year}) — рейтинг: {m.rating}")
@@ -235,7 +249,7 @@ class ConsoleApp:
 
     def _ensure_logged_in(self) -> bool:
         if self._current_user is None:
-            print("Сначала войдите или зарегистрируйтесь.\n")
+            print(RED + "Сначала войдите или зарегистрируйтесь.\n" + RESET)
             return False
         return True
 
@@ -262,7 +276,7 @@ class ConsoleApp:
         try:
             return float(value)
         except ValueError:
-            print("Фильтр по рейтингу отключён.")
+            print(YELLOW + "Фильтр по рейтингу отключён." + RESET)
             return None
 
     @staticmethod
@@ -273,7 +287,7 @@ class ConsoleApp:
         try:
             return int(value)
         except ValueError:
-            print("Фильтр по году отключён.")
+            print(YELLOW + "Фильтр по году отключён." + RESET)
             return None
 
 
