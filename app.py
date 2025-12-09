@@ -5,11 +5,12 @@ from typing import Optional
 
 from utils.movie_db import MovieDB
 from core.entities.movie import Movie
-# from recommender import (
-#     GenreBasedStrategy,
-#     RatingBasedStrategy,
-#     SimilarUsersStrategy,
-# )
+
+from recommender.strategies import (            # <<< добавили импорт стратегий
+    RecommendationEngine,
+    UserGenreRecommendationStrategy,
+    RatingStrategy,
+)
 
 # ===== Цвета ANSI =====
 RESET = "\033[0m"
@@ -52,12 +53,15 @@ class ConsoleApp:
         self._users: dict[str, ConsoleUser] = {}
         self._current_user: Optional[ConsoleUser] = None
 
-        # паттерн Strategy (Блок 2)
-        # self._strategies = {
-        #     "1": GenreBasedStrategy(),
-        #     "2": RatingBasedStrategy(),
-        #     "3": SimilarUsersStrategy(),
-        # }
+        # --- Движок рекомендаций + стратегии (из recommender.py) ---
+        self._engine = RecommendationEngine(
+            UserGenreRecommendationStrategy(top_n=5)
+        )  # стратегия по умолчанию
+
+        self._strategies = {
+            "1": UserGenreRecommendationStrategy(top_n=5),
+            "2": RatingStrategy(limit=5),
+        }
 
     # ================== ГЛАВНЫЙ ЦИКЛ ==================
 
@@ -219,14 +223,15 @@ class ConsoleApp:
         print(CYAN + "Выберите стратегию:" + RESET)
         print("1. По любимым жанрам пользователя")
         print("2. Фильмы с наивысшим рейтингом")
-        print("3. На основе похожих пользователей")
+        print("3. На основе похожих пользователей (пока не реализовано)")
         choice = input(YELLOW + "Ваш выбор: " + RESET).strip()
 
         strategy = self._strategies.get(choice)
         if not strategy:
-            print(RED + "Неизвестная стратегия.\n" + RESET)
+            print(RED + "Неизвестная или ещё не реализованная стратегия.\n" + RESET)
             return
 
+        # фильтры
         min_rating = self._ask_optional_float(
             "Минимальный рейтинг (Enter — без фильтра): "
         )
@@ -234,7 +239,15 @@ class ConsoleApp:
             "Минимальный год выпуска (Enter — без фильтра): "
         )
 
-        recommended = strategy.recommend(self._movies, self._current_user, self._users)
+        # выставляем стратегию в движке и считаем рекомендации
+        self._engine.set_strategy(strategy)
+        recommended = self._engine.recommend(
+            self._movies,
+            user=self._current_user,
+            users=self._users,
+        )
+
+        # применяем фильтры
         recommended = self._apply_filters(recommended, min_rating, min_year)
 
         if not recommended:
