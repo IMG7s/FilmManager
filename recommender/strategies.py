@@ -1,103 +1,90 @@
-from core.entities.movie import Movie
-from utils.movie_db import MovieDB
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import Any
+
+from core.entities.movie import Movie
 
 
-# --- Пользователи ---
-class User:
-    def __init__(self, user_id, name, favorite_genres):
-        self.id = user_id
-        self.name = name
-        self.favorite_genres = favorite_genres
-
-
-user = User(1, "ikhsan", ["ужасы", "комедия"])
-user2 = User(2, "Tom", ["фантастика"])
-user3 = User(3, "Jean", ["драма", "комедия"])
-
-
-# --- Стратегия (абстрактная) ---
 class RecommendationStrategy(ABC):
     @abstractmethod
-    def recommend(self, movies, **kwargs):
-        pass
+    def recommend(
+            self,
+            movies: list[Movie],
+            user: Any = None,
+            users: Any = None,
+            **kwargs,
+    ) -> list[Movie]:
+        """Вернуть список рекомендованных фильмов."""
+        raise NotImplementedError
 
 
-# --- Стратегия №1: По жанрам ---
 class UserGenreRecommendationStrategy(RecommendationStrategy):
-    def recommend(self, movies, user=None, top_n=5, **kwargs):
+    """
+    Стратегия №1: рекомендации по любимым жанрам пользователя.
+    Работает с:
+      - user.favorite_genres  ИЛИ
+      - user.preferred_genres (как в ConsoleUser)
+    """
+
+    def __init__(self, top_n: int = 5) -> None:
+        self.top_n = top_n
+
+    def recommend(
+            self,
+            movies: list[Movie],
+            user: Any = None,
+            **kwargs,
+    ) -> list[Movie]:
         if user is None:
             raise ValueError("Для рекомендации по жанрам требуется user")
 
-        favorite_genres = user.favorite_genres
+        # Пытаемся взять favorite_genres, если нет — preferred_genres
+        favorite_genres = getattr(user, "favorite_genres", None)
+        if favorite_genres is None:
+            favorite_genres = getattr(user, "preferred_genres", [])
 
         matched = [
-            movie for movie in movies
+            movie
+            for movie in movies
             if any(g in movie.genres for g in favorite_genres)
         ]
 
         sorted_movies = sorted(matched, key=lambda m: m.rating, reverse=True)
+        return sorted_movies[: self.top_n]
 
-        return sorted_movies[:top_n]
 
-
-# --- Стратегия №2: По рейтингу ---
 class RatingStrategy(RecommendationStrategy):
-    def __init__(self, limit=5):
+    """
+    Стратегия №2: просто топ фильмов по рейтингу.
+    """
+
+    def __init__(self, limit: int = 5) -> None:
         self.limit = limit
 
-    def recommend(self, movies, **kwargs):
+    def recommend(
+            self,
+            movies: list[Movie],
+            **kwargs,
+    ) -> list[Movie]:
         sorted_movies = sorted(
             movies,
             key=lambda m: m.rating,
-            reverse=True
+            reverse=True,
         )
-        return sorted_movies[:self.limit]
+        return sorted_movies[: self.limit]
 
 
-# --- Движок рекомендаций ---
 class RecommendationEngine:
-    def __init__(self, strategy: RecommendationStrategy):
-        self.strategy = strategy
+    """
+    Движок рекомендаций, который использует текущую стратегию.
+    """
 
-    def set_strategy(self, strategy):
-        self.strategy = strategy
+    def __init__(self, strategy: RecommendationStrategy) -> None:
+        self._strategy = strategy
 
-    def recommend(self, movies, **kwargs):
-        return self.strategy.recommend(movies, **kwargs)
+    def set_strategy(self, strategy: RecommendationStrategy) -> None:
+        self._strategy = strategy
 
-
-
-# ==============================
-# ЗАГРУЗКА БАЗЫ ФИЛЬМОВ
-# ==============================
-
-db = MovieDB("/Users/ikhsan/PycharmProjects/FilmManager/test_movies.json")
-
-movies = db.db      # ← вот список Movie, взятый из JSON
-
-
-# ==============================
-# ТЕСТ: рекомендация по жанрам
-# ==============================
-
-engine = RecommendationEngine(UserGenreRecommendationStrategy())
-
-print("\nРекомендации по жанрам:")
-recs = engine.recommend(movies, user=user, top_n=3)
-
-for m in recs:
-    print(m)
-
-
-# ==============================
-# ТЕСТ: рекомендация по рейтингу
-# ==============================
-
-engine.set_strategy(RatingStrategy(limit=3))
-
-print("\nТоп по рейтингу:")
-recs = engine.recommend(movies)
-
-for m in recs:
-    print(m)
+    def recommend(self, movies: list[Movie], **kwargs) -> list[Movie]:
+        return self._strategy.recommend(movies, **kwargs)
