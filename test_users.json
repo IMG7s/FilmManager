@@ -6,5 +6,13 @@
     "genres": [
       "драма"
     ]
+  },
+  {
+    "id": 2,
+    "user_name": "Alex",
+    "password": "secure_password",
+    "genres": [
+      "драма"
+    ]
   }
 ]
